@@ -1,0 +1,89 @@
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: ftps-service
+  labels:
+    app: ftps
+  annotations:
+    metallb.universe.tf/allow-shared-ip: default
+spec:
+  type: LoadBalancer
+  ports:
+  - name: cmd
+    protocol: TCP
+    port: 21
+    targetPort: 21
+  - name: pasv
+    protocol: TCP
+    port: 60060
+    targetPort: 60060
+  selector:
+    app: ftps
+
+---
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+  name: task-pv-claim
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi
+---
+
+kind: PersistentVolume
+apiVersion: v1
+metadata:
+  name: task-pv-volume
+  labels:
+    type: local
+spec:
+  capacity:
+    storage: 1Gi
+  accessModes:
+    - ReadWriteOnce
+  hostPath:
+    path: "/tmp/data"
+---
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ftps-deploy
+  labels:
+    app: ftps
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: ftps
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        app: ftps
+    spec:
+      volumes:
+      - name: task-pv-storage
+        persistentVolumeClaim:
+          claimName: task-pv-claim
+      containers:
+      - name: ftps
+        image: ftp-web3
+        imagePullPolicy: Never
+        ports:
+        - containerPort: 21
+          name: cmd
+        - containerPort: 60060
+        volumeMounts:
+        - mountPath: "/home/user"
+          name: task-pv-storage
+        env:
+        - name: FTP_USER
+          value: "user"
+        - name: FTP_PASS
+          value: "test"

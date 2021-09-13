@@ -1,0 +1,95 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: influxdb-service
+spec:
+  ports:
+  - port: 8086
+    protocol: TCP
+    targetPort: 8086
+  selector:
+    app: influxdb
+  type: ClusterIP
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: influxdb-data
+spec:
+  accessModes:
+  - ReadWriteOnce
+  resources:
+    requests:
+      storage: 2Gi
+
+---
+# apiVersion: apps/v1
+# kind: Deployment
+# metadata:
+#   labels:
+#     app: influxdb
+#   name: influxdb
+# spec:
+#   replicas: 1
+#   selector:
+#     matchLabels:
+#       app: influxdb
+#   strategy:
+#     type: Recreate
+#   template:
+#     metadata:
+#       labels:
+#         app: influxdb
+#     spec:
+#       volumes:
+#       - name: var-lib-influxdb
+#         persistentVolumeClaim:
+#           claimName: influxdb-pvc
+#       - name: influxdb-config
+#         configMap:
+#           name: influxdb-config
+#       containers:
+#         - name: influxdb
+#           image: influxdb-web
+#           imagePullPolicy: Never
+#           resources: {}
+#           ports:
+#             - containerPort: 8086
+#           volumeMounts:
+#           - mountPath: /var/lib/influxdb
+#             name: var-lib-influxdb
+#           - mountPath: /etc/influxdb/influxdb.conf
+#             name: influxdb-config
+#             subPath: influxdb.conf
+#             readOnly: true
+# ---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: influxdb-deployment
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: influxdb
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        app: influxdb
+    spec:
+      containers:
+        - image: influxdb-web
+          name: influxdb
+          imagePullPolicy: Never
+          resources: {}
+          ports:
+            - containerPort: 8086
+          volumeMounts:
+            - mountPath: /var/lib/influxdb
+              name: influxdb-data
+      volumes:
+        - name: influxdb-data
+          persistentVolumeClaim:
+            claimName: influxdb-data

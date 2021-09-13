@@ -1,0 +1,51 @@
+# **************************************************************************** #
+#                                                                              #
+#                                                         :::      ::::::::    #
+#    wordpress.yaml                                     :+:      :+:    :+:    #
+#                                                     +:+ +:+         +:+      #
+#    By: latkins <latkins@student.42.fr>            +#+  +:+       +#+         #
+#                                                 +#+#+#+#+#+   +#+            #
+#    Created: 2021/03/10 10:55:51 by fngoc             #+#    #+#              #
+#    Updated: 2021/04/06 16:12:59 by latkins          ###   ########.fr        #
+#                                                                              #
+# **************************************************************************** #
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: wordpress-svc
+  annotations:
+    metallb.universe.tf/allow-shared-ip: default
+spec:
+  selector:
+    app: wordpress
+  type: LoadBalancer
+  ports:
+    - protocol: TCP
+      port: 5050
+      targetPort: 5050
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: wordpress-deploy
+  labels:
+    app: wordpress
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: wordpress
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        app: wordpress
+    spec:
+      containers:
+        - name: wordpress
+          image: wordpress-web5
+          imagePullPolicy: Never
+          ports:
+            - containerPort: 5050

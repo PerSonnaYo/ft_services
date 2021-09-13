@@ -1,0 +1,18 @@
+apiVersion: 1
+# # list of datasources that should be deleted from the database
+#deleteDatasources:
+#   - name: Graphite
+#     orgId: 1
+datasources:
+#   # <string, required> name of the datasource. Required
+  - name: InfluxDB
+#   # <string, required> datasource type. Required
+    type: influxdb
+#   # <string, required> access mode. direct or proxy. Required
+    access: proxy
+#   # <int> org id. will default to orgId 1 if not specified
+    orgId: 1
+#   # <string> url
+    url: http://influxdb-service:8086
+    database: telegraf
+    editable: true
